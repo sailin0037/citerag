@@ -1,0 +1,243 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+}
+
+@property --bg-pos-x {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 50%;
+}
+
+@property --bg-pos-y {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 50%;
+}
+
+@keyframes mesh-movement {
+  0% {
+    --bg-pos-x: 0%;
+    --bg-pos-y: 0%;
+  }
+  25% {
+    --bg-pos-x: 100%;
+    --bg-pos-y: 0%;
+  }
+  50% {
+    --bg-pos-x: 100%;
+    --bg-pos-y: 100%;
+  }
+  75% {
+    --bg-pos-x: 0%;
+    --bg-pos-y: 100%;
+  }
+  100% {
+    --bg-pos-x: 0%;
+    --bg-pos-y: 0%;
+  }
+}
+
+.bg-mesh {
+  background: 
+    radial-gradient(circle at var(--bg-pos-x) var(--bg-pos-y), rgba(39, 39, 42, 0.5) 0%, transparent 40%),
+    radial-gradient(circle at calc(100% - var(--bg-pos-x)) calc(100% - var(--bg-pos-y)), rgba(24, 24, 27, 0.8) 0%, transparent 50%),
+    #09090b;
+  animation: mesh-movement 20s infinite linear;
+}
+
+/* Streaming Response Animation */
+@keyframes typing-dot {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.typing-indicator span {
+  animation: typing-dot 1.4s infinite;
+}
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* SVG draw effect */
+.draw-underline {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: draw 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: 0.3s;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
+}
+body:hover::-webkit-scrollbar-thumb {
+  opacity: 1;
+}
+
+::selection { 
+  background: rgba(16, 185, 129, 0.3); 
+  color: white; 
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(0.98); }
+}
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+html, body {
+  background-color: #09090b;
+  color: white;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Apple Intelligence Style AI Orb */
+@keyframes orb-spin-1 {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  33% { transform: translate(10%, -10%) scale(1.1) rotate(120deg); }
+  66% { transform: translate(-10%, 10%) scale(0.9) rotate(240deg); }
+  100% { transform: translate(0, 0) scale(1) rotate(360deg); }
+}
+
+@keyframes orb-spin-2 {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  33% { transform: translate(-10%, 10%) scale(0.9) rotate(120deg); }
+  66% { transform: translate(10%, -10%) scale(1.1) rotate(240deg); }
+  100% { transform: translate(0, 0) scale(1) rotate(360deg); }
+}
+
+.apple-orb-container {
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: transparent;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.apple-orb-layer1, .apple-orb-layer2 {
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  filter: blur(8px);
+}
+
+.apple-orb-layer1 {
+  background: conic-gradient(from 0deg, #3b82f6, #ec4899, #8b5cf6, #3b82f6);
+  animation: orb-spin-1 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  opacity: 0.8;
+}
+
+.apple-orb-layer2 {
+  background: conic-gradient(from 180deg, #10b981, #06b6d4, #f59e0b, #10b981);
+  animation: orb-spin-2 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  opacity: 0.8;
+}
+
+.glass-sphere-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.05) 40%, rgba(255, 255, 255, 0) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    inset 0px 4px 15px rgba(255, 255, 255, 0.8), /* Top bright edge reflection */
+    inset 0px -15px 30px rgba(0, 0, 0, 0.6), /* Deep bottom shadow for 3D volume */
+    inset 0px -2px 10px rgba(255, 255, 255, 0.2), /* Subtle rim light at the bottom */
+    0px 20px 40px rgba(0, 0, 0, 0.5); /* Heavy drop shadow */
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.glass-sphere-reflection {
+  position: absolute;
+  top: 5%;
+  left: 15%;
+  width: 70%;
+  height: 40%;
+  border-radius: 50% 50% 30% 30% / 60% 60% 30% 30%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 100%);
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* Apple Glow Input */
+.apple-glow-input {
+  position: relative;
+}
+.apple-glow-input::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(45deg, rgba(59,130,246,0.3), rgba(236,72,153,0.3), rgba(139,92,246,0.3), rgba(16,185,129,0.3));
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.apple-glow-input:focus-within::before {
+  opacity: 1;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
