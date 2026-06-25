@@ -2,7 +2,19 @@
 
 CiteRAG is an enterprise-grade, hyper-optimized Retrieval-Augmented Generation (RAG) framework. This document serves as the absolute source of truth for the architecture, engineering decisions, and internal pipeline mechanisms of both the serverless web application and the standalone Python Retrieval engine.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/HRmyFI5p0Fk?si=S_qgwQZ4p50HqUBz&amp;controls=0&amp;start=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=HRmyFI5p0Fk" target="_blank" rel="noopener noreferrer">
+    <img 
+      src="https://img.youtube.com/vi/HRmyFI5p0Fk/maxresdefault.jpg" 
+      alt="CiteRAG Technical Demo - Citation-Backed RAG Platform" 
+      width="100%" 
+      style="max-width: 720px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"
+    />
+  </a>
+</p>
+<p align="center" style="font-size: 0.9em; color: #6e7681;">
+  <em>Click thumbnail to watch the 60-second technical deep dive • Verified Grounded RAG Architecture</em>
+</p>
 
 ---
 
