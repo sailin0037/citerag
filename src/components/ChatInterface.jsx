@@ -414,9 +414,8 @@ export default function ChatInterface() {
                   <p className="relative text-zinc-200 whitespace-pre-wrap text-[15px] sm:text-base">{msg.content}</p>
                 </div>
               ) : (
-                
-              {/* --- AI MESSAGE BUBBLE --- */}
                 <div className="flex flex-col gap-4 self-start w-full sm:max-w-[95%]">
+                  {/* --- AI MESSAGE BUBBLE --- */}
                   {/* Hardcoded check: If the AI returns this exact phrase, render a special Red Warning Box */}
                   {msg.content === "⚠️ I cannot find this information in the uploaded document. Please try rephrasing or check another section." ? (
                     <div className="flex items-start gap-4">
