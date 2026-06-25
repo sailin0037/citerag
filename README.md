@@ -1,6 +1,6 @@
 # CiteRAG 🌌: The Comprehensive Technical Deep Dive
 
-CiteRAG is an enterprise-grade, hyper-optimized Retrieval-Augmented Generation (RAG) framework. This document serves as the absolute source of truth for the architecture, engineering decisions, and internal pipeline mechanisms of both the serverless web application and the standalone Python Retrieval engine.
+CiteRAG is an hyper-optimized Retrieval-Augmented Generation (RAG) framework. This document serves as the absolute source of truth for the architecture, engineering decisions, and internal pipeline mechanisms of both the serverless web application and the standalone Python Retrieval engine.
 
 <p align="center">
   <a href="https://www.youtube.com/watch?v=HRmyFI5p0Fk" target="_blank" rel="noopener noreferrer">
