@@ -61,6 +61,8 @@ export default function ChatInterface() {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   // Store the massive block of text we extracted from the PDF
   const [pdfContext, setPdfContext] = useState('');
+  // Store images extracted from the PDF or uploaded directly
+  const [pdfImages, setPdfImages] = useState([]);
   // Store the name of the file the text came from
   const [contextSource, setContextSource] = useState(null);
   // Wait until the initial intro animations finish before enabling scrolling
@@ -81,6 +83,44 @@ export default function ChatInterface() {
     // Scroll to the bottom so the user always sees the newest text
     scrollToBottom();
   }, [messages, isStreaming]);
+
+  // A helper to convert a regular image file into a base64 string
+  const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
+
+  // A helper to render the first 5 pages of a PDF to base64 images
+  const renderPdfToImages = async (file) => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const typedArray = new Uint8Array(arrayBuffer);
+      const loadingTask = pdfjsLib.getDocument({ data: typedArray });
+      const pdf = await loadingTask.promise;
+      
+      const images = [];
+      const numPagesToRender = Math.min(pdf.numPages, 5); // Cap to 5 pages
+      
+      for (let i = 1; i <= numPagesToRender; i++) {
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 1.5 });
+        
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+        images.push(canvas.toDataURL('image/jpeg', 0.8));
+      }
+      return images;
+    } catch (err) {
+      console.error("PDF Image Extraction Error:", err);
+      throw new Error("Failed to render PDF document as images.");
+    }
+  };
 
   // A function that takes a raw File object (PDF) and turns it into readable text
   const extractTextFromPDF = async (file) => {
@@ -148,23 +188,37 @@ export default function ChatInterface() {
 
     // Start with whatever PDF text we already had in memory
     let newContext = pdfContext;
+    let newImages = pdfImages;
 
     // If the user just attached a new file...
     if (currentFile) {
       // Tell the UI to show a loading spinner for PDF processing
       setIsProcessingPdf(true);
       try {
-        // Run our extractor function to get the text
-        const extracted = await extractTextFromPDF(currentFile);
-        newContext = extracted; // Save the extracted text
+        const isVisionModel = selectedModel.includes('nemotron');
         
-        // If the PDF is insanely huge, cut it off at 100,000 characters to avoid crashing the AI
-        if (newContext.length > 100000) {
-          newContext = newContext.substring(0, 100000) + '... [truncated]';
+        if (currentFile.type.startsWith('image/')) {
+          const base64 = await fileToBase64(currentFile);
+          newImages = [base64];
+          newContext = '';
+        } else if (currentFile.type === 'application/pdf' && isVisionModel) {
+          newImages = await renderPdfToImages(currentFile);
+          newContext = '';
+        } else {
+          // Run our extractor function to get the text
+          const extracted = await extractTextFromPDF(currentFile);
+          newContext = extracted; // Save the extracted text
+          newImages = []; // Clear images
+          
+          // If the PDF is insanely huge, cut it off at 100,000 characters to avoid crashing the AI
+          if (newContext.length > 100000) {
+            newContext = newContext.substring(0, 100000) + '... [truncated]';
+          }
         }
         
-        // Save this new text to our main state so we remember it for next time
+        // Save this new state so we remember it for next time
         setPdfContext(newContext);
+        setPdfImages(newImages);
         setContextSource(currentFile.name);
       } catch (err) {
         // If parsing fails, show the error on screen and stop
@@ -202,10 +256,11 @@ export default function ChatInterface() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // Send the chat history, the PDF text, and the chosen model as JSON
+        // Send the chat history, the PDF text, images, and the chosen model as JSON
         body: JSON.stringify({ 
           messages: apiMessages, 
           context: newContext, 
+          images: newImages,
           model: selectedModel 
         })
       });
@@ -738,7 +793,7 @@ export default function ChatInterface() {
                 type="file" 
                 ref={fileInputRef} 
                 onChange={handleFileChange}
-                accept=".pdf" 
+                accept=".pdf,image/*" 
                 className="hidden" 
               />
 
@@ -756,6 +811,7 @@ export default function ChatInterface() {
                     {selectedModel === 'z-ai/glm-5.1' ? 'GLM-5.1 (Recommended)' : 
                      selectedModel === 'stepfun-ai/step-3.7-flash' ? 'Step-3.7 (Fast)' : 
                      selectedModel === 'meta/llama-3.1-70b-instruct' ? 'Llama 70B (Medium)' : 
+                     selectedModel === 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning' ? 'Nemotron Vision (Extra)' : 
                      selectedModel.split('/').pop()}
                   </span>
                   {/* The little arrow that flips upside down when open */}
@@ -818,6 +874,19 @@ export default function ChatInterface() {
                         >
                           <div className={`w-1.5 h-1.5 rounded-full ${selectedModel === 'meta/llama-3.1-70b-instruct' ? 'bg-emerald-400' : 'bg-transparent'}`}></div>
                           Llama 70B (Medium)
+                        </button>
+                        
+                        {/* Option 4: Nemotron Vision */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedModel('nvidia/nemotron-3-nano-omni-30b-a3b-reasoning');
+                            setIsModelDropdownOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-xs text-zinc-300 hover:bg-zinc-700/50 hover:text-white transition-colors"
+                        >
+                          <div className={`w-1.5 h-1.5 rounded-full ${selectedModel === 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning' ? 'bg-emerald-400' : 'bg-transparent'}`}></div>
+                          Nemotron Vision (Extra)
                         </button>
                       </motion.div>
                     </>

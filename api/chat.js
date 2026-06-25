@@ -20,8 +20,8 @@ export default async function handler(req) {
   }
 
   try {
-    // Extract the chat history (messages), the document text (context), and the requested AI model from the request body
-    const { messages, context, model } = await req.json();
+    // Extract the chat history (messages), the document text (context), images, and the requested AI model from the request body
+    const { messages, context, images, model } = await req.json();
 
     // Make sure the user actually sent a valid array of messages. If not, return an error.
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -29,7 +29,11 @@ export default async function handler(req) {
     }
 
     // Define the strict rules (System Prompt) that the AI must follow when answering
-    const systemPrompt = `You are an intelligent AI assistant tasked with answering questions based on the provided context document.
+    const systemPrompt = (images && images.length > 0)
+      ? `You are an intelligent AI assistant tasked with analyzing the provided images (which may be pages of a document) and answering questions based on them.
+If the answer is not contained within the images, simply state that you don't have enough information. Do not hallucinate.
+Answer the question using ONLY the provided images.`
+      : `You are an intelligent AI assistant tasked with answering questions based on the provided context document.
 If the answer is not contained within the context, simply state that you don't have enough information. Do not hallucinate.
 
 Answer the question using ONLY the provided context. At the end of your response, you MUST cite the source for EACH quote individually in this exact format: [Source: Page X | Match: 0.XX] followed by the exact quote used. NEVER combine page numbers or citations (e.g., do NOT write [Source: Page 1, 3]). Produce a separate [Source: ...] block for every quote. Return citations as plain text only. NO markdown formatting.
@@ -43,6 +47,25 @@ ${context || "No context document provided."}`;
       ...messages
     ];
 
+    // If the frontend sent images, modify the latest user message to the multimodal format
+    if (images && images.length > 0) {
+      const lastMessage = finalMessages[finalMessages.length - 1];
+      if (lastMessage.role === 'user') {
+        const textContent = lastMessage.content;
+        const newContent = [
+          { type: 'text', text: textContent }
+        ];
+        // Append all images to the message content
+        images.forEach(imgData => {
+          newContent.push({
+            type: 'image_url',
+            image_url: { url: imgData }
+          });
+        });
+        lastMessage.content = newContent;
+      }
+    }
+
     // Determine which AI model to use. If the user didn't specify one, default to Llama 70B
     const requestedModel = model || 'meta/llama-3.1-70b-instruct';
     
@@ -54,12 +77,18 @@ ${context || "No context document provided."}`;
       top_p: 0.95, // Filter out low-probability words
       stream: true // Ask the AI to stream the response back word-by-word
     };
+    
+    // We will use requestOptions to pass non-standard parameters (like extra_body) to the OpenAI JS SDK
+    let requestOptions = {};
 
     // If the user requested the Nemotron-3 model, we need to pass specific parameters to enable its "thinking" mode
     if (requestedModel.includes('nemotron')) {
       requestBody.max_tokens = 16384; // Allow long responses
-      requestBody.reasoning_budget = 16384; // Give it space to think
-      requestBody.chat_template_kwargs = {"enable_thinking":true}; // Turn on the thinking feature
+      // The OpenAI Node SDK will strip custom fields from requestBody, so we MUST pass them in extra_body
+      requestOptions.extra_body = {
+        reasoning_budget: 16384,
+        chat_template_kwargs: { "enable_thinking": true }
+      };
     } 
     // If they requested the GLM-5.1 model, adjust settings specifically for its logic requirements
     else if (requestedModel === 'z-ai/glm-5.1') {
@@ -92,8 +121,8 @@ ${context || "No context document provided."}`;
         }, 8000);
 
         try {
-          // Send the actual request to the NVIDIA AI model
-          const response = await openai.chat.completions.create(requestBody);
+          // Send the actual request to the NVIDIA AI model, including our custom requestOptions
+          const response = await openai.chat.completions.create(requestBody, requestOptions);
           
           // Once the AI starts responding, we don't need the keep-alive interval anymore
           clearInterval(keepAliveInterval);
